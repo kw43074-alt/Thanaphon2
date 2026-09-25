@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Task Tracker - ระบบติดตามงานค้างอัจฉริยะ</title>
+    <style>
+        /* Modern Colorful & Soft Light Theme */
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            --accent-yellow: #F59E0B;
+            --accent-green: #10B981;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3F4F6 100%);
+            color: var(--text-main);
+            padding: 2.5rem 1rem;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container { 
+            max-width: 760px; 
+            margin: 0 auto; 
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            color: #312E81;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #subtitle {
+            margin-top: 0.5rem;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group { 
+            margin-bottom: 1.25rem; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        label { 
+            font-weight: 600; 
+            margin-bottom: 6px; 
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        input { 
+            padding: 12px 16px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 10px; 
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+            background-color: #FAFAFA;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background-color: #FFFFFF;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 14px;
+            border-radius: 10px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+        }
+
+        /* Task Cards Layout */
+        .grid-container {
+            container-type: inline-size;
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .task-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border-left: 6px solid var(--accent-yellow);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .task-info h3 {
+            margin: 0 0 4px 0;
+            font-size: 1.15rem;
+            color: var(--text-main);
+        }
+
+        .task-info p {
+            margin: 2px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-action:hover { opacity: 0.85; }
+        .btn-edit { background: #EEF2FF; color: var(--primary); }
+        .btn-complete { background: #ECFDF5; color: var(--accent-green); }
+
+        @container (min-width: 500px) {
+            .task-card {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .task-card.completed {
+            border-left-color: var(--accent-green);
+            background: #F0FDF4;
+        }
+
+        .task-card.completed .task-info h3 {
+            text-decoration: line-through;
+            color: #6EE7B7;
+        }
+
+        /* Material Modal */
+        body.modal-open { overflow: hidden; }
+
+        .material-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .material-modal.is-open {
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .material-modal__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.4);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 180ms ease;
+        }
+
+        .material-modal.is-open .material-modal__backdrop { opacity: 1; }
+
+        .material-modal__surface {
+            position: relative;
+            z-index: 1;
+            width: min(460px, 100%);
+            background: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(18px) scale(0.96);
+            transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .material-modal.is-open .material-modal__surface {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .material-modal__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px 12px;
+        }
+
+        .material-modal__title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .material-modal__icon {
+            display: grid;
+            place-items: center;
+            width: 40px;
+            height: 40px;
+            background: #EEF2FF;
+            border-radius: 50%;
+            font-size: 20px;
+        }
+
+        .material-modal__header h2 { margin: 0; font-size: 1.2rem; }
+        .material-modal__close { border: none; background: transparent; font-size: 24px; cursor: pointer; color: var(--text-muted); }
+
+        .material-modal__form { padding: 8px 24px 24px; }
+        .material-field { display: flex; flex-direction: column; margin-bottom: 16px; }
+        .material-field label { font-size: 0.88rem; margin-bottom: 6px; }
+
+        .material-modal__actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .material-button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .material-button--text { background: #F3F4F6; color: #4B5563; }
+        .material-button--filled { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>📋 Smart Task Tracker</h1>
+            <div id="subtitle">ระบบติดตามงานค้างอัจฉริยะ</div>
+        </div>
+
+        <div class="form-card">
+            <div class="form-group">
+                <label for="subject">วิชา:</label>
+                <input type="text" id="subject" placeholder="เช่น วิทยาการคำนวณ...">
+            </div>
+            <div class="form-group">
+                <label for="task">ชื่องาน:</label>
+                <input type="text" id="task" placeholder="เช่น โปรเจกต์ OOP...">
+            </div>
+            <div class="form-group">
+                <label for="dueDate">กำหนดส่ง:</label>
+                <input type="date" id="dueDate">
+            </div>
+            <button class="btn-primary" onclick="addTask()">เพิ่มรายการงาน</button>
+        </div>
+
+        <div class="grid-container" id="taskList">
+            <div class="task-card">
+                <div class="task-info">
+                    <h3>วิทยาการคำนวณ</h3>
+                    <p><strong>งาน:</strong> โปรเจกต์ OOP</p>
+                    <p><strong>กำหนดส่ง:</strong> 2026-09-30</p>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-action btn-edit" onclick="openModal()">แก้ไข</button>
+                    <button class="btn-action btn-complete" onclick="toggleComplete(this)">เสร็จสิ้น</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ตัวอย่างสำหรับแก้ไขข้อมูล -->
+    <div class="material-modal" id="editModal">
+        <div class="material-modal__backdrop" onclick="closeModal()"></div>
+        <div class="material-modal__surface">
+            <div class="material-modal__header">
+                <div class="material-modal__title-group">
+                    <div class="material-modal__icon">✏️</div>
+                    <div>
+                        <h2>แก้ไขรายการงาน</h2>
+                        <p>ปรับปรุงรายละเอียดของงานค้าง</p>
+                    </div>
+                </div>
+                <button class="material-modal__close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="material-modal__form">
+                <div class="material-field">
+                    <label>วิชา</label>
+                    <input type="text" value="วิทยาการคำนวณ">
+                </div>
+                <div class="material-field">
+                    <label>ชื่องาน</label>
+                    <input type="text" value="โปรเจกต์ OOP">
+                </div>
+                <div class="material-modal__actions">
+                    <button class="material-button material-button--text" onclick="closeModal()">ยกเลิก</button>
+                    <button class="material-button material-button--filled" onclick="closeModal()">บันทึก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('editModal').classList.add('is-open');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('is-open');
+            document.body.classList.remove('modal-open');
+        }
+
+        function toggleComplete(button) {
+            const card = button.closest('.task-card');
+            card.classList.toggle('completed');
+        }
+
+        function addTask() {
+            const subject = document.getElementById('subject').value;
+            const task = document.getElementById('task').value;
+            const dueDate = document.getElementById('dueDate').value;
+
+            if(!subject || !task) {
+                alert('กรุณากรอกวิชาและชื่องาน');
+                return;
+            }
+
+            const taskList = document.getElementById('taskList');
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.innerHTML = `
+                <div class="task-info">
+                    <h3>${subject}</h3>
+                    <p><strong>งาน:</strong> ${task}</p>
+                    <p><strong>กำหนดส่ง:</strong> ${dueDate || 'ไม่ระบุ'}</p>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-action btn-edit" onclick="openModal()">แก้ไข</button>
+                    <button class="btn-action btn-complete" onclick="toggleComplete(this)">เสร็จสิ้น</button>
+                </div>
+            `;
+            taskList.appendChild(card);
+
+            document.getElementById('subject').value = '';
+            document.getElementById('task').value = '';
+            document.getElementById('dueDate').value = '';
+        }
+    </script>
+</body>
+</html>
